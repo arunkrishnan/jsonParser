@@ -1,4 +1,20 @@
 import re
+import argparse
+import urllib2
+from pprint import pprint
+
+def check_file(name):
+    try:
+        with open(name,'r') as fd:
+            return fd.read()
+    except:
+        raise argparse.ArgumentTypeError('Corrupted File')
+
+def check_url(url):
+    try:
+        return urllib2.urlopen(url).read()
+    except:
+         raise argparse.ArgumentTypeError('Error in URL parsing')
 
 def commaParser(data):
     if data and data[0]==',':
@@ -88,5 +104,13 @@ def parser_factory(*args):
     return custom_parser
 
 if "__main__" == __name__:
-    txt = open('youtube.json', 'r')
-    print parser_factory(arrayParser, objectParser)(txt.read().strip())[0]    
+    arg_parser = argparse.ArgumentParser(prog='json Parser')
+    arg_group  = arg_parser.add_mutually_exclusive_group(required=True)
+    arg_group.add_argument('-f', '--filename', type=check_file, help='file name, that contains JSON')
+    arg_group.add_argument('-u', '--url', type=check_url, help='url')
+    args = arg_parser.parse_args()
+    if args.filename:
+        data = args.filename
+    elif args.url:
+        data = args.url
+    pprint(parser_factory(arrayParser, objectParser)(data.strip())[0])
